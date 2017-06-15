@@ -8,7 +8,8 @@ dt_all_grams <- readRDS(file = "./final/ngram_dataset.RDS")
 
 
 
-
+# Benchmark code
+# from Jan Hagelauer on Github
 #    ----------------------------------------------------------------------
 
 require(digest)
