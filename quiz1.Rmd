@@ -1,0 +1,111 @@
+---
+title: "Coursera-SwiftKey"
+output: html_document
+---
+
+
+```{r}
+
+destination_file <- "Coursera-SwiftKey.zip"
+source_file <- "http://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip"
+
+# execute the download
+download.file(source_file, destination_file)
+
+# extract the files from the zip file
+unzip(destination_file)
+
+
+list.files("final")
+
+list.files("final/en_US")
+
+
+
+blogs <- readLines("final/en_US/en_US.blogs.txt", encoding="UTF-8")
+twitter <- readLines("final/en_US/en_US.twitter.txt", encoding="UTF-8")
+
+
+
+
+con <- file("final/en_US/en_US.news.txt", open="rb")
+news <- readLines(con, encoding="UTF-8")
+close(con)
+rm(con)
+
+
+```
+
+
+```{r}
+
+file.info("final/en_US/en_US.blogs.txt")$size   / 1024^2
+
+file.info("final/en_US/en_US.news.txt")$size    / 1024^2
+
+file.info("final/en_US/en_US.twitter.txt")$size / 1024^2
+
+
+
+
+
+```
+
+
+```{r}
+
+library(stringi)
+library(ggplot2)
+
+
+#analyse the lines and characters
+stri_stats_general( blogs )
+
+stri_stats_general( news )
+
+stri_stats_general( twitter )
+
+#count the words per item (line); summarize
+
+words_blogs   <- stri_count_words(blogs)
+summary( words_blogs )
+
+qplot(   words_blogs )
+
+words_news    <- stri_count_words(news)
+summary( words_news )
+
+
+qplot(   words_news )
+
+
+words_twitter <- stri_count_words(twitter)
+summary( words_twitter )
+
+qplot(   words_twitter )
+
+
+#longest line 
+longBlogs<-stri_length(blogs)
+max(longBlogs)
+
+
+#how many lines with "love" vs "hate"
+loveTwitter <- grep("love", twitter)
+length(loveTwitter) #90956
+# 2. do same for "hate"
+hateTwitter<-grep("hate", twitter)
+length(hateTwitter)
+
+length(loveTwitter)/length(hateTwitter)
+
+
+#tweet containing "biostats"
+bioTwitter <- grep("biostats", twitter)
+twitter[bioTwitter]
+
+chessTwitter <- grep("A computer once beat me at chess, but it was no match for me at kickboxing", twitter)
+chessTwitter
+
+```
+

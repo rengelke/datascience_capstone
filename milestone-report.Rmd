@@ -1,0 +1,235 @@
+---
+title: "Data Science Capstone Project"
+output: html_document
+---
+
+##Milestone Report
+
+#####R. Engelke   -   03/20/2016
+
+
+##Executive Summary
+
+The goal of the Data Science Capstone project is to develop a predictive text model and wrap it into a Shiny application.
+This part should cover an overview of the data set used for the development of the model, including the understanding of the distribution and relationship betwen the words, word combinations and short phrases. 
+
+The provided text data files were processed for the development of the predictive model. The focus was lying on cleaning up the data so that words, tokens and phrases could be extracted without redundancy. It was observed that removing typing errors,  abbrevations and irregular words in an automated manner by matching the words to the words found in the dictionary (stemming) is not straight forward. The distribution of the words, word pairs (bigrams), and three word sets (trigrams) was analysed. The result, as shown in the graphs below, indicated that the so called stop words are very abundant among the most common words and word pairs. 
+
+
+##Data mining
+
+###Loading and preparing data
+
+The data set was downloaded and three files which are a collection of english blog posts, twitter posts, and news were used. To speed up the initial data mining process a subset of 5,000 randomly selected lines was used for analysis.
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(reshape2)
+library(ggplot2)
+library(tm)
+library(qdap)
+library(SnowballC)
+
+
+
+# download and extract raw text data 
+
+# destination_file <- "Coursera-SwiftKey.zip"
+# source_file <- "https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip"
+# 
+# # execute the download
+# download.file(source_file, destination_file)
+# 
+# # extract the files from the zip file
+# unzip(destination_file)
+
+blogs <- readLines("final/en_US/en_US.blogs.txt", encoding="UTF-8")
+twitter <- readLines("final/en_US/en_US.twitter.txt", encoding="UTF-8")
+news <- readLines("final/en_US/en_US.news.txt", encoding="UTF-8")
+all <- c(blogs, twitter, news)
+rm(blogs, news, twitter)
+
+#selecting a fraction of 5,000 lines for analysis
+data_raw <- all[sample(1:length(all), 5000, replace=FALSE)]
+
+```
+
+
+###Testing feasability of spelling correction and stemming
+
+For the development of a predictive algorithm it might be of interest to check for correct spellling of words as well as reducing the complexity by stemming of the words (e.g. convert plural nouns to singular, change time of verbs to present tense). The following shows that about 25% of the extracted words were not found a dataset containing a vector of Grady Ward’s English words augmented with DICTIONARY (Nettalk Corpus Syllable Data Set), Mark Kantrowitz’s names list, other proper nouns, and contractions. 
+
+An automated approach to correct them to their stem form by trying to find a most close word in the dictionary was not very encouraging. Most of the suggested corrections are wrong and would lead to a change of the actual meaning of the word. Currently, there is no good automated solution for that in R and packages like Porter Stemmer or Snowball don't perform well here. After this observations the words were left unchaged for further analysis.
+
+
+
+```{r, message=FALSE, warning=FALSE}
+
+
+data_corpus <- Corpus(VectorSource(data_raw))
+all_wrds <- unique(bag_o_words(as.data.frame(data_corpus)[[2]]))
+missed_wrds <- all_wrds[is.na(match(all_wrds, GradyAugmented))]
+
+print("number of words extracted from data set fraction")
+length(all_wrds)
+print("number of words not found the dictionary")
+length(missed_wrds)
+print("fraction of words not found in the dictionary")
+length(missed_wrds)/length(all_wrds)
+
+chars <- nchar(GradyAugmented)
+replacements <- sapply(missed_wrds[1:10], function(x, range = 3, max.distance = .1) {
+                                  x <- stemDocument(x)
+                                  wchar <- nchar(x)
+                                  dict <- GradyAugmented[chars >= (wchar - range) & chars <= (wchar + range)]
+                                  dict <- dict[agrep(x, dict, max.distance=max.distance)]
+                                  names(which.min(sapply(dict, qdap:::Ldist, x)))
+                                  }
+                       )
+print("correction suggestion for the first 10 words using Snowball stem function")
+unlist(head(replacements, 15))
+
+# check_spelling(missed_wrds[21:40], range = 2, assume.first.correct = TRUE, 
+#                method = "jw", dictionary = qdapDictionaries::GradyAugmented, 
+#                parallel = TRUE, cores = parallel::detectCores()/2, n.suggests = 1)
+
+
+
+```
+
+
+
+However, some commonly used abbreviations and contractions were changed using manually curated correction rules:
+
+```{r, message=FALSE, warning=FALSE}
+
+#correction function
+correct <- function(x) {
+                           tmp <- x %>%
+                                   gsub("'ll", " will", ., perl=TRUE) %>%
+                                   gsub("ain’t", "am not", ., perl=TRUE) %>%
+                                   gsub("aren't", "are not", ., perl=TRUE) %>%
+                                   gsub("'ve", " have", ., perl=TRUE) %>%
+                                   gsub("'s", " is", ., perl=TRUE) %>%
+                                   gsub("'d", " had", ., perl=TRUE) %>%
+                                   gsub("can't", "can not", ., perl=TRUE) %>%
+                                   gsub("n't", " not", ., perl=TRUE) %>%
+                                   gsub("I'm", "I am", ., perl=TRUE) %>%
+                                   gsub("c'mon", "come on", ., perl=TRUE) %>%
+                                   gsub("gonna", "going to", ., perl=TRUE) %>%
+                                   gsub("gotta", "got to", ., perl=TRUE) %>%
+                                   gsub("wanna", "want to", ., perl=TRUE) %>%
+                                   gsub("kinda", "kind of", ., perl=TRUE) %>%
+                                   tolower()
+                           return(tmp)
+}
+
+#apply to sampled subset
+data_txt <- correct(data_raw)
+
+
+## ------------------------ ###
+## statistics after correction
+
+data_corpus <- Corpus(VectorSource(data_txt))
+all_wrds <- unique(bag_o_words(as.data.frame(data_corpus)[[2]]))
+missed_wrds <- all_wrds[is.na(match(all_wrds, GradyAugmented))]
+
+print("number of words extracted from data set fraction")
+length(all_wrds)
+print("number of words not found the dictionary")
+length(missed_wrds)
+print("fraction of words not found in the dictionary")
+length(missed_wrds)/length(all_wrds)
+
+
+```
+
+
+
+###Exploratory Analysis
+
+The word extraction from text was performed and the appearence of words was analyzed. The so called stop words are dominating among the abundand words and phrases. As exemplified for the three word combination the amount of the stop words is decreasing when looking at the median 20 word combinations. 
+
+```{r}
+#split data into single words
+
+char <- "[\\.|\\,|\\:|\\/|\\;|\\?|\\!| |\\“|\\”|\\-|\\!|\\(|\\)|\\{|\\}|\\|\\%|\\$|\\&|\\*|\\-|\\\\|\\+|\\#|\\^|\\\"]{1,5}"
+all_wrds <- unlist( strsplit(data_txt, char, fixed=FALSE, perl=TRUE) )
+
+#distribution of words
+
+distr_1mers <- summary(as.factor(all_wrds))
+tmp1mers <- head(melt(distr_1mers),50)
+
+ggplot(tmp1mers, aes(x = rownames(tmp1mers), y = value)) + 
+  geom_bar(stat = "Identity") + 
+  ggtitle("Distribution of words") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+
+#tokenization to 2-grams
+
+all_2mers <- suppressWarnings(
+                    rbind(
+                         data.frame(matrix(all_wrds, ncol = 2, byrow = TRUE)),
+                         data.frame(matrix(all_wrds[-1], ncol = 2, byrow = TRUE))
+                    )
+)
+all_2mers$mrg <- apply(all_2mers, 1, function(x) paste(x, collapse=" "))
+all_2mers$mode <- sapply(gregexpr("[[:alpha:]]+", all_2mers$mrg), function(x) sum(x > 0))
+all_2mers <- filter(all_2mers, mode == 2)
+
+
+distr_2mers <- summary(as.factor(all_2mers$mrg))
+tmp2mers <- head(melt(distr_2mers),20)
+
+ggplot(tmp2mers, aes(x = rownames(tmp2mers), y = value)) + 
+  geom_bar(stat = "Identity") + 
+  ggtitle("Top 20 two-gram terms") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+#tokenization to 3-grams
+
+all_3mers <- suppressWarnings(
+                    rbind(
+                         data.frame(matrix(all_wrds, ncol = 3, byrow = TRUE)),
+                         data.frame(matrix(all_wrds[-1], ncol = 3, byrow = TRUE)),
+                         data.frame(matrix(all_wrds[-2], ncol = 3, byrow = TRUE))
+                    )
+)
+all_3mers$mrg <- apply(all_3mers, 1, function(x) paste(x, collapse=" "))
+all_3mers$mode <- sapply(gregexpr("[[:alpha:]]+", all_3mers$mrg), function(x) sum(x > 0))
+
+distr_3mers <- summary(as.factor(all_3mers[all_3mers$mode == 3,]$mrg))
+tmp3mers <- head(melt(distr_3mers),20)
+
+ggplot(tmp3mers, aes(x = rownames(tmp3mers), y = value)) + 
+  geom_bar(stat = "Identity") + 
+  ggtitle("Top 20 three-gram terms") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+tmp3mers <- melt(distr_3mers[(length(distr_3mers)/2-10):(length(distr_3mers)/2+10)])
+
+ggplot(tmp3mers, aes(x = rownames(tmp3mers), y = value)) + 
+  geom_bar(stat = "Identity") + 
+  ggtitle("Median 20 three-gram terms") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+```
+
+
+##Outlook for predictive model
+
+Based on the current analysis I will tackle the following points during the development of the predictive algorithm:
+
+- Find an appropriate cut-off at which less common words can be removed without significantly decreasing the prediction strength. This seems to be necessary in order to minimize the dataset enabling faster performance.
+- Generate a basis for the prediction model of a data matrix containing commonly occurring word combinations (1-4 grams)
+- It remains to be answered if prediction can be improved when using two separate 1- to 4-gram matrices, one containing stop words and one without stop words.
+- In a longer sentences semantic based prediction (appearance of nouns with certain verbs in one sentence) rather then sequence of words could improve the prediction model
+- For the prediction I will test some common Natural Language Processing algorithms (Linear MLE Interpolation, Kneser-Ney Smoothing) for the power in terms of speed and accuracy.
+
+
