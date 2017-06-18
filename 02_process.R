@@ -41,6 +41,7 @@ data_token <- data_token[is.na(match(data_token, tolower(LETTERS[c(-1,-9)]) ))]
 
 
 #create N-grams
+one_grams <- create_ngram(data_token, n=1)
 two_grams <- create_ngram(data_token, n=2)
 three_grams <- create_ngram(data_token, n=3)
 four_grams <- create_ngram(data_token, n=4)
@@ -49,6 +50,7 @@ six_grams <- create_ngram(data_token, n=6)
 
 
 #create N-gram lookup data table
+table_one_grams <- clean_ngram_list(one_grams, f=1)
 table_two_grams <- clean_ngram_list(two_grams, f=3)
 table_three_grams <- clean_ngram_list(three_grams, f=3)
 table_four_grams <- clean_ngram_list(four_grams, f=3)
@@ -60,6 +62,7 @@ table_six_grams <- clean_ngram_list(six_grams, f=3)
 ## combine n-gram tables
 dt_all_grams  <- as.data.table(
      bind_rows(
+          table_one_grams,
           table_two_grams,
           table_three_grams,
           table_four_grams,
@@ -67,12 +70,6 @@ dt_all_grams  <- as.data.table(
           table_six_grams
           )
 )
-
-
-rm(data_raw, data_token)
-rm(two_grams, three_grams, four_grams, five_grams, six_grams, seven_grams)
-rm(table_two_grams, table_three_grams, table_four_grams, table_five_grams, table_six_grams, table_seven_grams)
-gc(verbose=FALSE)
 
 class(dt_all_grams)
 
@@ -82,7 +79,10 @@ saveRDS(dt_all_grams, file = "./final/ngram_dataset.RDS")
 saveRDS(dt_all_grams, file = "./app/data/ngram_dataset.RDS")
 
 
-
+rm(data_raw, data_token)
+rm(one_grams, two_grams, three_grams, four_grams, five_grams, six_grams, seven_grams)
+rm(table_one_grams, table_two_grams, table_three_grams, table_four_grams, table_five_grams, table_six_grams, table_seven_grams)
+gc(verbose=FALSE)
 
 
 
