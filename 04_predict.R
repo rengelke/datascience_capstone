@@ -1,4 +1,9 @@
 
+# ######################################################################### #
+#                                                                           #
+# Final function for word prediction      --------------------------------- #
+#                                                                           #
+# ######################################################################### # 
 
 
 
@@ -14,9 +19,11 @@ dt_all_grams3 <- dt_all_grams[dt_all_grams$'word.count' == 3, ]
 dt_all_grams2 <- dt_all_grams[dt_all_grams$'word.count' == 2, ]
 
 
+input<-"hello co"
+
 predict_word <- function (input) {
      
-     input <- tokenize(tail(input, 8))
+     input <- tokenize(tail(input, 10))
      input <- input[!is.na(match(input, GradyAugmented))]
      
      

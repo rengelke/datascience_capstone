@@ -1,8 +1,15 @@
 
 
+# ######################################################################### #
+#                                                                           #
+# Raw text processing for word prediction algorithm training                #
+#   - cleaning, tokenization, formatting -                                  #
+#                                                                           #
+# ######################################################################### # 
+
+
+
 source("utils.R")
-
-
 
 data_raw <- readRDS("./final/dataset.RDS")
 
@@ -29,6 +36,8 @@ data_token <- tokenize(data_raw)
 
 #remove words not found in GradyAugmented dictionary
 data_token <- data_token[!is.na(match(data_token, GradyAugmented))]
+#remove letters except a and i
+data_token <- data_token[is.na(match(data_token, tolower(LETTERS[c(-1,-9)]) ))]
 
 
 #create N-grams
@@ -61,14 +70,15 @@ dt_all_grams  <- as.data.table(
 
 
 rm(data_raw, data_token)
-rm(one_grams, two_grams, three_grams, four_grams, five_grams, six_grams, seven_grams)
-rm(table_one_grams, table_two_grams, table_three_grams, table_four_grams, table_five_grams, table_six_grams, table_seven_grams)
+rm(two_grams, three_grams, four_grams, five_grams, six_grams, seven_grams)
+rm(table_two_grams, table_three_grams, table_four_grams, table_five_grams, table_six_grams, table_seven_grams)
 gc(verbose=FALSE)
 
 class(dt_all_grams)
 
 
 #save lookup dataset to the app directory
+saveRDS(dt_all_grams, file = "./final/ngram_dataset.RDS")
 saveRDS(dt_all_grams, file = "./app/data/ngram_dataset.RDS")
 
 

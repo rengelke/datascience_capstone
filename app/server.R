@@ -1,13 +1,16 @@
 
-#
-# Server: WoPr [wopper] - The Word Prediction App 
-# 
+
+# ######################################################################### #
+#                                                                           #
+# Server: WoPr [wopper] - The Word Prediction App                           #
+# Coursera Data Science Capstone Project                                    #
+#                                                                           #
+# ######################################################################### # 
 
 
-source("utils.R")
+library(shiny)
+source("app_utils.R")
 
-# load dataset
-dt_all_grams <- readRDS("./data/ngram_dataset.RDS")
 
 
 # server logic

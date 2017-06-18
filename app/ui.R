@@ -1,8 +1,16 @@
-#
-# Server: WoPr [wopper] - The Word Prediction App 
-# 
+
+
+# ######################################################################### #
+#                                                                           #
+# UI: WoPr [wopper] - The Word Prediction App                               #
+# Coursera Data Science Capstone Project                                    #
+#                                                                           #
+# ######################################################################### # 
+
+
 
 library(shiny)
+
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(

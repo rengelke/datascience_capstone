@@ -1,4 +1,13 @@
 
+# ######################################################################### #
+#                                                                           #
+# Testing different approaches and word prediction algorithms               #
+# - quick and dirty -                                                       #
+#                                                                           #
+# ######################################################################### # 
+
+
+
 
 dt_all_grams <- readRDS("./final/ngram_dataset.RDS")
 ls_all_grams <- readRDS("./final/ngram_dataset_ls.RDS")

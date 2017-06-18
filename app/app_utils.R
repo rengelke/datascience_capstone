@@ -1,5 +1,13 @@
 
 
+# ######################################################################### #
+#                                                                           #
+# Utils: WoPr - Word Prediction App                                         #
+#   - libraries and functions -                                             #
+#                                                                           #
+# ######################################################################### # 
+
+
 library(dplyr)
 library(magrittr)
 library(stringi)
@@ -11,11 +19,26 @@ library(data.table)
 library(shiny)
 
 
+
+# LOAD N-GARM DATASET FOR SHINY
+
+# load dataset
+dt_all_grams <- readRDS("../app/data/ngram_dataset.RDS")
+
+# split into database chuncks
+dt_all_grams6 <- dt_all_grams[dt_all_grams$'word.count' == 6, ]
+dt_all_grams5 <- dt_all_grams[dt_all_grams$'word.count' == 5, ]
+dt_all_grams4 <- dt_all_grams[dt_all_grams$'word.count' == 4, ]
+dt_all_grams3 <- dt_all_grams[dt_all_grams$'word.count' == 3, ]
+dt_all_grams2 <- dt_all_grams[dt_all_grams$'word.count' == 2, ]
+rm(dt_all_grams)
+
+
 # TOKENIZE FUNCTION
 tokenize <- function(x) {
      
      char <- "[\\.|\\,|\\:|\\/|\\;|\\?|\\!| |\\“|\\”||\\-|\\!|\\(|\\)|\\{|\\}|\\|
-               \\%|\\$|\\&|\\*|\\-|\\\\|\\+|\\#|\\^|\\\"|\\<|\\>]{1,10}"
+     \\%|\\$|\\&|\\*|\\-|\\\\|\\+|\\#|\\^|\\\"|\\<|\\>]{1,10}"
      
      x %<>%
           gsub("c'mon", "come on", ., perl=TRUE) %>%
@@ -24,12 +47,13 @@ tokenize <- function(x) {
           gsub("wanna", "want to", ., perl=TRUE) %>%
           gsub("kinda", "kind of", ., perl=TRUE) %>%
           gsub("e-mail", "email", ., perl=TRUE) %>%
+          gsub("e-book", "ebook", ., perl=TRUE) %>%
           gsub("N.Y.", "NY", ., perl=TRUE) %>%
           gsub("L.A.", "LA", ., perl=TRUE) %>%
-          gsub("D.C.", "DC", tmp, perl=TRUE) %>%
+          gsub("D.C.", "DC", ., perl=TRUE) %>%
           gsub(" o ", "oh", ., perl=TRUE) %>%
           gsub("a.m.", "am", ., perl=TRUE) %>%
-          gsub("p.m.", "am", ., perl=TRUE) %>%
+          gsub("p.m.", "pm", ., perl=TRUE) %>%
           gsub(" u ", " you ", ., perl=TRUE) %>%
           gsub(" r ", " are ", ., perl=TRUE) %>%
           gsub(" cu ", " see you ", ., perl=TRUE) %>%
@@ -63,7 +87,7 @@ create_ngram <- function (v, n = 2, sep = " ") {
           )
      }
 }
-     
+
 # N-GRAM LIST CREATION, REVERSE
 create_ngram_back <- function (v, n = 2, sep = " ") {
      
@@ -109,7 +133,7 @@ clean_ngram_list <- function (x, f = 1) {
           
           y <- matrix(
                unlist(str_split(x[,1], " ")), 
-                 ncol = median(x$word.count), byrow = TRUE
+               ncol = median(x$word.count), byrow = TRUE
           ) 
           
           k <- dim(y)[2]
@@ -118,10 +142,10 @@ clean_ngram_list <- function (x, f = 1) {
                x <- cbind.data.frame(x, y, stringsAsFactors = FALSE)
           } else {
                x <- cbind.data.frame(x,
-                                    apply(y[,1:(k-1)], 1, function (x) {paste(x, collapse=" ")}),
-                                    y[,k],
-                                    stringsAsFactors = FALSE
-                                    )
+                                     apply(y[,1:(k-1)], 1, function (x) {paste(x, collapse=" ")}),
+                                     y[,k],
+                                     stringsAsFactors = FALSE
+               )
           }
           
           colnames(x)[-c(1:3)] <- c(paste0("part", seq(1:2)))
@@ -130,7 +154,7 @@ clean_ngram_list <- function (x, f = 1) {
      data.table(x)
      
 }
-     
+
 
 
 # N-GRAM DATA TABLE COMPLETION EXTENDED
@@ -161,8 +185,8 @@ clean_ngram_list_full <- function (x, f = 1) {
           y_full <- cbind(x[,1],
                           matrix(data=NA, ncol=(8-1), nrow = dim(x)[1])
           )
-               
-               matrix(data = NA, ncol=8)
+          
+          matrix(data = NA, ncol=8)
      } else {
           
           y <- matrix(
@@ -175,9 +199,9 @@ clean_ngram_list_full <- function (x, f = 1) {
           #assert_all_are_in_closed_range(k, lower = 2, upper = 8, severity = getOption("stop") )
           
           y_full <- cbind(
-                              y[,1:(k-1)],
-                              matrix(data=NA, nrow = dim(y)[1], ncol=(8-k)),
-                              y[,k]
+               y[,1:(k-1)],
+               matrix(data=NA, nrow = dim(y)[1], ncol=(8-k)),
+               y[,k]
           )
           
           
@@ -194,7 +218,7 @@ clean_ngram_list_full <- function (x, f = 1) {
 # WORD PREDICTION
 predict_word <- function (input) {
      
-     input <- tokenize(tail(input, 8))
+     input <- tokenize(tail(input, 10))
      input <- input[!is.na(match(input, GradyAugmented))]
      
      

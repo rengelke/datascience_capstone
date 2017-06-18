@@ -1,5 +1,13 @@
 
 
+# ######################################################################### #
+#                                                                           #
+# Utils: WoPr - Word Prediction App                                         #
+#   - libraries and functions -                                             #
+#                                                                           #
+# ######################################################################### # 
+
+
 library(dplyr)
 library(magrittr)
 library(stringi)
@@ -7,8 +15,9 @@ library(stringr)
 library(qdap)
 library(assertthat)
 library(assertive.types)
+library(digest)
 library(data.table)
-library(shiny)
+
 
 
 # TOKENIZE FUNCTION
@@ -24,12 +33,13 @@ tokenize <- function(x) {
           gsub("wanna", "want to", ., perl=TRUE) %>%
           gsub("kinda", "kind of", ., perl=TRUE) %>%
           gsub("e-mail", "email", ., perl=TRUE) %>%
+          gsub("e-book", "ebook", ., perl=TRUE) %>%
           gsub("N.Y.", "NY", ., perl=TRUE) %>%
           gsub("L.A.", "LA", ., perl=TRUE) %>%
-          gsub("D.C.", "DC", tmp, perl=TRUE) %>%
+          gsub("D.C.", "DC", ., perl=TRUE) %>%
           gsub(" o ", "oh", ., perl=TRUE) %>%
           gsub("a.m.", "am", ., perl=TRUE) %>%
-          gsub("p.m.", "am", ., perl=TRUE) %>%
+          gsub("p.m.", "pm", ., perl=TRUE) %>%
           gsub(" u ", " you ", ., perl=TRUE) %>%
           gsub(" r ", " are ", ., perl=TRUE) %>%
           gsub(" cu ", " see you ", ., perl=TRUE) %>%
@@ -194,7 +204,7 @@ clean_ngram_list_full <- function (x, f = 1) {
 # WORD PREDICTION
 predict_word <- function (input) {
      
-     input <- tokenize(tail(input, 8))
+     input <- tokenize(tail(input, 10))
      input <- input[!is.na(match(input, GradyAugmented))]
      
      

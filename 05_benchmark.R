@@ -1,20 +1,17 @@
 
 
+# ######################################################################### #
+#                                                                           #
+# Benchmarking                                                              #
+# Code from Jan Hagelauer (https://github.com/jan-san/dsci-benchmark)       #
+# newer version H.Foffani (https://github.com/hfoffani/dsci-benchmark)      #
+#                                                                           #
+# ######################################################################### # 
+
+
+
 source("utils.R")
-source("04_predict.R")
 
-
-dt_all_grams <- readRDS(file = "./final/ngram_dataset.RDS")
-
-
-
-# Benchmark code
-# from Jan Hagelauer on Github
-#    ----------------------------------------------------------------------
-
-require(digest)
-require(stringi)
-require(data.table)
 
 ################################################################################################
 #
@@ -215,6 +212,16 @@ benchmark <- compiler::cmpfun(function(FUN, ..., sent.list, ext.output=T) {
 # 04. Perform the benchmark
 #
 ################################################################################################
+dt_all_grams <- readRDS("./app/data/ngram_dataset.RDS")
+
+# split into database chuncks
+dt_all_grams6 <- dt_all_grams[dt_all_grams$'word.count' == 6, ]
+dt_all_grams5 <- dt_all_grams[dt_all_grams$'word.count' == 5, ]
+dt_all_grams4 <- dt_all_grams[dt_all_grams$'word.count' == 4, ]
+dt_all_grams3 <- dt_all_grams[dt_all_grams$'word.count' == 3, ]
+dt_all_grams2 <- dt_all_grams[dt_all_grams$'word.count' == 2, ]
+rm(dt_all_grams)
+
 benchmark(predict_word, 
           # additional parameters to be passed to the prediction function can be inserted here
           sent.list = list('tweets' = tweets,

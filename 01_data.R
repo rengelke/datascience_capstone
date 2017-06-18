@@ -21,7 +21,7 @@ news <- readLines("final/en_US/en_US.news.txt", encoding="UTF-8")
 
 #sample a fraction of N lines for analysis
 set.seed(1607)
-n = 0.05
+n = 0.05  # percent fraction
 blogs <- blogs[sample(1:length(blogs), length(blogs)*n, replace=FALSE)]
 twitter <- twitter[sample(1:length(twitter), length(twitter)*n, replace=FALSE)]
 news <- news[sample(1:length(news), length(news)*n, replace=FALSE)]
