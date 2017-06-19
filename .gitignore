@@ -3,5 +3,7 @@
 .RData
 .Ruserdata
 .DS_Store
+rsconnect
 final
-WoPr/rsconnect
+app/rsconnect
+app/.DS_Store
